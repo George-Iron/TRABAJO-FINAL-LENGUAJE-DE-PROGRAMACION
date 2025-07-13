@@ -1,80 +1,155 @@
-# main_oop.py
+# main_oop_es.py
+import os
 
 # --- CLASE BASE ---
 # El plano para cualquier cosa que ocupe un lugar en el mapa y tenga vida.
-class Entity:
+class Entidad:
     """Un objeto genérico para representar al jugador, monstruos, etc."""
-    def __init__(self, x, y, char, hp):
-        self.x = x          # Posición en el eje X
-        self.y = y          # Posición en el eje Y
-        self.char = char    # Carácter visual (e.g., '@')
-        self.hp = hp        # Puntos de vida
+    def __init__(self, x, y, caracter, hp):
+        self.x = x            # Posición en el eje X
+        self.y = y            # Posición en el eje Y
+        self.caracter = caracter  # Carácter visual (e.g., '@')
+        self.hp = hp          # Puntos de vida
 
-    def move(self, dx, dy):
+    def mover(self, dx, dy):
         """Mueve la entidad una cierta cantidad."""
-        pass  # La lógica irá aquí
+        self.x += dx
+        self.y += dy
 
-    def take_damage(self, amount):
-        """Reduce el HP de la entidad."""
-        pass  # La lógica irá aquí
-
+    def recibir_danio(self, cantidad):
+        """Reduce el HP de la entidad y maneja la muerte."""
+        self.hp -= cantidad
+        if self.hp < 0:
+            self.hp = 0
 
 # --- CLASES QUE HEREDAN ---
-# Especializaciones de la clase Entity. Por ahora, no necesitan nada extra.
-class Player(Entity):
+# Especializaciones de la clase Entidad.
+class Jugador(Entidad):
     """La clase que representa al jugador."""
     pass
 
-
-class Monster(Entity):
+class Monstruo(Entidad):
     """La clase que representa a un enemigo."""
     pass
 
-
 # --- CLASES DE GESTIÓN ---
-class GameMap:
+class MapaJuego:
     """Gestiona el mapa del juego, incluyendo los muros y el suelo."""
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.tiles = []  # Esto será una cuadrícula 2D (lista de listas)
+    def __init__(self, ancho, alto):
+        self.ancho = ancho
+        self.alto = alto
+        # Usamos un mapa estático para consistencia en el benchmark
+        self.celdas = [
+            list("##########"),
+            list("#@.......#"),
+            list("#........#"),
+            list("#...M....#"),
+            list("#........#"),
+            list("#........#"),
+            list("#....M...#"),
+            list("#........#"),
+            list("#........#"),
+            list("##########"),
+        ]
 
-    def is_walkable(self, x, y):
-        """Devuelve True si la casilla (x,y) no es un muro."""
-        pass  # La lógica irá aquí
+    def es_transitable(self, x, y):
+        """Devuelve True si la celda (x,y) no es un muro."""
+        # Comprobar si está dentro de los límites del mapa
+        if not (0 <= x < self.ancho and 0 <= y < self.alto):
+            return False
+        # Comprobar si es un muro
+        if self.celdas[y][x] == '#':
+            return False
+        return True
 
-
-class Game:
+class Juego:
     """Orquesta todo el juego. Contiene el bucle principal y todos los objetos del juego."""
     def __init__(self):
-        self.game_map = None    # Se creará un objeto GameMap aquí
-        self.player = None      # Se creará un objeto Player aquí
-        self.monsters = []      # Se llenará con objetos Monster
-        self.game_over = False
+        self.mapa_juego = MapaJuego(10, 10)
+        self.jugador = None
+        self.monstruos = []
+        self.juego_terminado = False
+        self.mensaje = ""
+        
+        self.configurar_juego()
 
-    def setup_game(self):
-        """Inicializa el mapa y las entidades."""
-        pass  # La lógica para crear el mapa, jugador y monstruos irá aquí
+    def configurar_juego(self):
+        """Inicializa el mapa y las entidades basándose en los caracteres del mapa."""
+        for y, fila in enumerate(self.mapa_juego.celdas):
+            for x, caracter in enumerate(fila):
+                if caracter == '@':
+                    self.jugador = Jugador(x, y, '@', 10) # 10 HP
+                    self.mapa_juego.celdas[y][x] = '.'
+                elif caracter == 'M':
+                    self.monstruos.append(Monstruo(x, y, 'M', 3)) # 3 HP
+                    self.mapa_juego.celdas[y][x] = '.'
 
-    def render(self):
+    def obtener_monstruo_en(self, x, y):
+        """Busca un monstruo en una ubicación específica."""
+        for monstruo in self.monstruos:
+            if monstruo.x == x and monstruo.y == y and monstruo.hp > 0:
+                return monstruo
+        return None
+
+    def renderizar(self):
         """Dibuja todo en la pantalla."""
-        pass  # La lógica de dibujado irá aquí
+        os.system('cls' if os.name == 'nt' else 'clear')
 
-    def handle_input(self):
+        mapa_a_mostrar = [list(fila) for fila in self.mapa_juego.celdas]
+
+        for monstruo in self.monstruos:
+            if monstruo.hp > 0:
+                mapa_a_mostrar[monstruo.y][monstruo.x] = monstruo.caracter
+
+        if self.jugador.hp > 0:
+            mapa_a_mostrar[self.jugador.y][self.jugador.x] = self.jugador.caracter
+
+        for fila in mapa_a_mostrar:
+            print("".join(fila))
+
+        print(f"HP del Jugador: {self.jugador.hp}")
+        monstruos_vivos = sum(1 for m in self.monstruos if m.hp > 0)
+        print(f"Monstruos restantes: {monstruos_vivos}")
+        print(self.mensaje)
+
+    def manejar_entrada(self, tecla):
         """Procesa la entrada del jugador."""
-        pass  # La lógica para leer el teclado e iniciar acciones irá aquí
+        self.mensaje = ""
+        movimientos = {'w': (0, -1), 'a': (-1, 0), 's': (0, 1), 'd': (1, 0)}
 
-    def run(self):
+        if tecla in movimientos:
+            dx, dy = movimientos[tecla]
+            nueva_x = self.jugador.x + dx
+            nueva_y = self.jugador.y + dy
+
+            if self.mapa_juego.es_transitable(nueva_x, nueva_y):
+                monstruo_objetivo = self.obtener_monstruo_en(nueva_x, nueva_y)
+                if monstruo_objetivo:
+                    monstruo_objetivo.recibir_danio(1)
+                    self.mensaje = f"¡Atacas al monstruo! Le quedan {monstruo_objetivo.hp} HP."
+                    if monstruo_objetivo.hp == 0:
+                        self.mensaje += " ¡El monstruo ha muerto!"
+                else:
+                    self.jugador.mover(dx, dy)
+            else:
+                self.mensaje = "No puedes moverte ahí."
+        else:
+            self.mensaje = "Tecla inválida. Usa W/A/S/D."
+
+        if all(monstruo.hp == 0 for monstruo in self.monstruos):
+            self.juego_terminado = True
+            self.mensaje = "¡Felicidades! Has derrotado a todos los monstruos."
+
+    def ejecutar(self):
         """El bucle principal del juego."""
-        # Este será el ciclo: renderizar, pedir input, procesar, repetir.
-        print("El juego ha comenzado. (Estructura lista)")
-        # while not self.game_over:
-        #     self.render()
-        #     self.handle_input()
-
+        while not self.juego_terminado:
+            self.renderizar()
+            tecla = input("Mover (W/A/S/D): ").lower()
+            self.manejar_entrada(tecla)
+        
+        self.renderizar() # Renderizado final para mostrar el mensaje de victoria.
 
 # --- PUNTO DE ENTRADA DEL PROGRAMA ---
-# Esto solo se ejecuta cuando corres el archivo directamente.
 if __name__ == "__main__":
-    game_instance = Game()
-    game_instance.run()
+    instancia_juego = Juego()
+    instancia_juego.ejecutar()
