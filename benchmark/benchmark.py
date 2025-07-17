@@ -1,10 +1,8 @@
-# benchmark.py
 import sys
 import os
 import timeit
 import copy
 
-# --- AJUSTE DE RUTA PARA ENCONTRAR LOS MÓDULOS ---
 ruta_proyecto = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ruta_proyecto)
 
@@ -24,8 +22,6 @@ except ImportError as e:
 def funcion_vacia(*args, **kwargs):
     pass
 
-# Reemplazamos las funciones/métodos que imprimen en pantalla
-# por nuestra función vacía. Esto silenciará los juegos durante el benchmark.
 JuegoOOP.renderizar = funcion_vacia
 main_fun.renderizar_estado = funcion_vacia
 # ----------------------------------------------------------------------
@@ -42,14 +38,12 @@ acciones = [accion for sublista in acciones_para_ganar for accion in sublista]
 
 def simular_partida_oop():
     juego = JuegoOOP()
-    # Desactivamos el input interactivo que está en el bucle 'ejecutar'
     for accion in acciones:
         if juego.juego_terminado:
             break
         juego.manejar_entrada(accion)
 
 def simular_partida_fp():
-    # El bucle de FP también es interactivo, así que lo replicamos aquí
     estado_juego = main_fun.crear_estado_inicial()
     for accion in acciones:
         if estado_juego['juego_terminado']:

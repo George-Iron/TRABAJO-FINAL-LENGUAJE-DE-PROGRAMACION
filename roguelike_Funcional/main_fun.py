@@ -5,10 +5,7 @@ import copy # ¡Muy importante para la inmutabilidad!
 # --- FUNCIONES PURAS Y DE GESTIÓN DE ESTADO ---
 
 def crear_estado_inicial():
-    """
-    Crea y devuelve el diccionario que representa el estado inicial del juego.
-    Es una función pura: siempre devuelve el mismo valor.
-    """
+    
     # El mapa base, solo con terreno. Las entidades se definen por separado.
     mapa_base = [
         "##########",
@@ -42,10 +39,7 @@ def crear_estado_inicial():
 
 
 def renderizar_estado(estado_juego):
-    """
-    Toma un estado del juego y lo muestra en pantalla.
-    Esta función es 'impura' por naturaleza porque interactúa con la terminal.
-    """
+    
     os.system('cls' if os.name == 'nt' else 'clear')
     
     # Crear una copia en memoria del mapa para poder colocar entidades
@@ -73,11 +67,6 @@ def renderizar_estado(estado_juego):
 
 
 def procesar_entrada(estado_juego, tecla):
-    """
-    La función pura más importante. Toma el estado actual y una acción,
-    y devuelve un NUEVO estado del juego con los cambios aplicados.
-    NO MODIFICA el 'estado_juego' original.
-    """
     # 1. Crear una copia profunda para garantizar la inmutabilidad
     nuevo_estado = copy.deepcopy(estado_juego)
     
@@ -87,7 +76,7 @@ def procesar_entrada(estado_juego, tecla):
     movimientos = {'w': (0, -1), 'a': (-1, 0), 's': (0, 1), 'd': (1, 0)}
     if tecla not in movimientos:
         nuevo_estado['mensaje'] = "Tecla inválida. Usa W/A/S/D."
-        return nuevo_estado # Devolvemos el estado nuevo pero sin cambios de lógica
+        return nuevo_estado 
 
     # 3. Calcular el nuevo movimiento
     dx, dy = movimientos[tecla]
@@ -109,23 +98,19 @@ def procesar_entrada(estado_juego, tecla):
             break
             
     if monstruo_objetivo_idx != -1:
-        # Atacar al monstruo (modificando la copia)
         monstruo_atacado = nuevo_estado['monstruos'][monstruo_objetivo_idx]
         monstruo_atacado['hp'] -= 1
         nuevo_estado['mensaje'] = f"¡Atacas al monstruo! Le quedan {monstruo_atacado['hp']} HP."
         if monstruo_atacado['hp'] == 0:
             nuevo_estado['mensaje'] += " ¡El monstruo ha muerto!"
     else:
-        # Mover al jugador (modificando la copia)
         nuevo_estado['jugador']['x'] = nueva_x
         nuevo_estado['jugador']['y'] = nueva_y
         
-    # 6. Comprobar condición de victoria
     if all(m['hp'] == 0 for m in nuevo_estado['monstruos']):
         nuevo_estado['juego_terminado'] = True
         nuevo_estado['mensaje'] = "¡Felicidades! Has derrotado a todos los monstruos."
         
-    # 7. Devolver el estado completamente nuevo
     return nuevo_estado
 
 
@@ -136,14 +121,13 @@ def bucle_juego(estado_juego):
     renderizar_estado(estado_juego)
 
     if estado_juego['juego_terminado']:
-        return # Termina la ejecución
+        return
 
     tecla = input("Mover (W/A/S/D): ").lower()
     siguiente_estado = procesar_entrada(estado_juego, tecla)
-    bucle_juego(siguiente_estado) # Llamada recursiva con el nuevo estado
+    bucle_juego(siguiente_estado)
 
 
-# --- PUNTO DE ENTRADA DEL PROGRAMA ---
 if __name__ == "__main__":
     estado_inicial = crear_estado_inicial()
     bucle_juego(estado_inicial)

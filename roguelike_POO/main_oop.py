@@ -1,15 +1,13 @@
-# main_oop_es.py
 import os
 
 # --- CLASE BASE ---
-# El plano para cualquier cosa que ocupe un lugar en el mapa y tenga vida.
 class Entidad:
     """Un objeto genérico para representar al jugador, monstruos, etc."""
     def __init__(self, x, y, caracter, hp):
-        self.x = x            # Posición en el eje X
-        self.y = y            # Posición en el eje Y
-        self.caracter = caracter  # Carácter visual (e.g., '@')
-        self.hp = hp          # Puntos de vida
+        self.x = x            
+        self.y = y          
+        self.caracter = caracter 
+        self.hp = hp          
 
     def mover(self, dx, dy):
         """Mueve la entidad una cierta cantidad."""
@@ -23,22 +21,17 @@ class Entidad:
             self.hp = 0
 
 # --- CLASES QUE HEREDAN ---
-# Especializaciones de la clase Entidad.
 class Jugador(Entidad):
-    """La clase que representa al jugador."""
     pass
 
 class Monstruo(Entidad):
-    """La clase que representa a un enemigo."""
     pass
 
 # --- CLASES DE GESTIÓN ---
 class MapaJuego:
-    """Gestiona el mapa del juego, incluyendo los muros y el suelo."""
     def __init__(self, ancho, alto):
         self.ancho = ancho
         self.alto = alto
-        # Usamos un mapa estático para consistencia en el benchmark
         self.celdas = [
             list("##########"),
             list("#@.......#"),
@@ -53,11 +46,8 @@ class MapaJuego:
         ]
 
     def es_transitable(self, x, y):
-        """Devuelve True si la celda (x,y) no es un muro."""
-        # Comprobar si está dentro de los límites del mapa
         if not (0 <= x < self.ancho and 0 <= y < self.alto):
             return False
-        # Comprobar si es un muro
         if self.celdas[y][x] == '#':
             return False
         return True
@@ -78,10 +68,10 @@ class Juego:
         for y, fila in enumerate(self.mapa_juego.celdas):
             for x, caracter in enumerate(fila):
                 if caracter == '@':
-                    self.jugador = Jugador(x, y, '@', 10) # 10 HP
+                    self.jugador = Jugador(x, y, '@', 10) 
                     self.mapa_juego.celdas[y][x] = '.'
                 elif caracter == 'M':
-                    self.monstruos.append(Monstruo(x, y, 'M', 3)) # 3 HP
+                    self.monstruos.append(Monstruo(x, y, 'M', 3)) 
                     self.mapa_juego.celdas[y][x] = '.'
 
     def obtener_monstruo_en(self, x, y):
@@ -147,7 +137,7 @@ class Juego:
             tecla = input("Mover (W/A/S/D): ").lower()
             self.manejar_entrada(tecla)
         
-        self.renderizar() # Renderizado final para mostrar el mensaje de victoria.
+        self.renderizar()
 
 # --- PUNTO DE ENTRADA DEL PROGRAMA ---
 if __name__ == "__main__":
